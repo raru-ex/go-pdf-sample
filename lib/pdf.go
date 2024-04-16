@@ -12,7 +12,7 @@ const (
 	CropBox  = "/CropBox"
 	BleedBox = "/BleedBox"
 	TrimdBox = "/TrimBox"
-	ArtBox   = "ArtBox"
+	ArtBox   = "/ArtBox"
 )
 
 // TODO: 適当にとりあえず
@@ -30,7 +30,7 @@ func ExportDiary() error {
 
 	pdf.AddPage()
 
-	err := pdf.AddTTFFont("Noto Sans JP", "./fonts/NotoSansJP-Regular.ttf")
+	err := pdf.AddTTFFont("Noto Sans JP", "./assets/fonts/NotoSansJP-Regular.ttf")
 	if err != nil {
 		return fmt.Errorf(err.Error())
 	}
@@ -40,11 +40,16 @@ func ExportDiary() error {
 		return fmt.Errorf(err.Error())
 	}
 
-	// tpl := pdf.ImportPage("./pdf/diary_template.pdf", 1, MediaBox) // 開けない
-	tpl := pdf.ImportPage("./pdf/weekly-journal-template.pdf", 1, MediaBox) // 開ける
+	tpl := pdf.ImportPage("./assets/pdf/diary_template.pdf", 1, MediaBox)
 	pdf.UseImportedTemplate(tpl, 0, 0, pageReact.W, pageReact.H)
 
 	drawGrid(&pdf, &pageReact)
+
+	// Rectにリサイズが行われて、比率が変わると引き伸ばされる
+	pdf.Image("./assets/photo/camp.jpg", 50, 50, &gopdf.Rect{
+		W: 400,
+		H: 300,
+	})
 
 	pdf.WritePdf("./output/output.pdf")
 
