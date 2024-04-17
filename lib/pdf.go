@@ -43,23 +43,49 @@ func ExportDiary() error {
 	tpl := pdf.ImportPage("./assets/pdf/diary_template.pdf", 1, MediaBox)
 	pdf.UseImportedTemplate(tpl, 0, 0, pageReact.W, pageReact.H)
 
-	drawGrid(&pdf, &pageReact)
+	// drawGrid(&pdf, &pageReact)
 
 	// Rectにリサイズが行われて、比率が変わると引き伸ばされる
-	pdf.Image("./assets/photo/camp.jpg", 50, 50, &gopdf.Rect{
-		W: 400,
-		H: 300,
+	pdf.Image("./assets/photo/camp.jpg", 47.64, 75, &gopdf.Rect{
+		W: 500,
+		H: 375,
 	})
+
+	// ChatGPT
+	text := `今日は自然の中での素晴らしい時間を過ごした。朝は鳥のさえずりで目覚め、清涼な空気を吸いながらの朝食は格別だった。
+	昼間は木々の間を散策し、奇跡的な景色に感動した。夜には満天の星空の下、仲間との団欒が心地よかった。焚火の炎を見つめながら、幸せな時間を共有し、マシュマロを焼いて笑い合った。自然の中での静寂に包まれ、心が穏やかになった。この経験は忘れられない思い出となった。`
+
+	// 横幅に適用できるように文字を分割、改行できるように
+	// TODO: 改行コードの分だけスペースが空く
+	lines, err := pdf.SplitText(text, 480)
+	if err != nil {
+		return fmt.Errorf(err.Error())
+	}
+
+	// 暫定
+	lineHeight := 16 * 1.2
+
+	for i, line := range lines {
+		if err := drawText(&pdf, 40, 480+float64(i)*lineHeight, line); err != nil {
+			return fmt.Errorf(err.Error())
+		}
+	}
 
 	pdf.WritePdf("./output/output.pdf")
 
 	return nil
 }
 
-// 座標検証用
+func drawText(pdf *gopdf.GoPdf, x float64, y float64, text string) error {
+	pdf.SetXY(x, y)
+	// cellを確保してもその範囲内で改行はしてくれない
+	return pdf.Cell(nil, text)
+}
+
+// 座標検証用: 縦長用紙前提
 func drawGrid(pdf *gopdf.GoPdf, page *gopdf.Rect) {
 	ww := 10.0
-	for i := 1; i < int(page.W/ww); i++ {
+	for i := 1; i <= int(page.H/ww); i++ {
 		if i%10 == 0 {
 			pdf.SetLineWidth(0.8)
 			pdf.SetStrokeColor(50, 50, 100)
