@@ -28,8 +28,6 @@ func ExportDiary() error {
 		PageSize: pageReact,
 	})
 
-	pdf.AddPage()
-
 	err := pdf.AddTTFFont("Noto Sans JP", "./assets/fonts/NotoSansJP-Regular.ttf")
 	if err != nil {
 		return fmt.Errorf(err.Error())
@@ -40,20 +38,61 @@ func ExportDiary() error {
 		return fmt.Errorf(err.Error())
 	}
 
-	tpl := pdf.ImportPage("./assets/pdf/diary_template.pdf", 1, MediaBox)
-	pdf.UseImportedTemplate(tpl, 0, 0, pageReact.W, pageReact.H)
+	// 暫定: fontの設定と行幅が色んな場所で転々と利用されているのがいまいち
+	lineHeight := 16 * 1.2
 
-	// drawGrid(&pdf, &pageReact)
+	// 表紙
+	pdf.AddPage()
+	pdf.UseImportedTemplate(pdf.ImportPage("./assets/pdf/diary_front_cover.pdf", 1, MediaBox), 0, 0, pageReact.W, pageReact.H)
+
+	// 日記の各ページ
+	pageTemplateID := pdf.ImportPage("./assets/pdf/diary_page.pdf", 1, MediaBox)
+	AddDialyPage(
+		&pdf,
+		pageTemplateID,
+		"./assets/photo/camp.jpg",
+		`今日は自然の中での素晴らしい時間を過ごした。朝は鳥のさえずりで目覚め、清涼な空気を吸いながらの朝食は格別だった。
+	昼間は木々の間を散策し、奇跡的な景色に感動した。夜には満天の星空の下、仲間との団欒が心地よかった。焚火の炎を見つめながら、幸せな時間を共有し、マシュマロを焼いて笑い合った。自然の中での静寂に包まれ、心が穏やかになった。この経験は忘れられない思い出となった。`, // ChatGPT
+		lineHeight,
+		pageReact,
+	)
+	AddDialyPage(
+		&pdf,
+		pageTemplateID,
+		"./assets/photo/camp.jpg",
+		`今日は自然の中での素晴らしい時間を過ごした。朝は鳥のさえずりで目覚め、清涼な空気を吸いながらの朝食は格別だった。
+		昼間は木々の間を散策し、奇跡的な景色に感動した。夜には満天の星空の下、仲間との団欒が心地よかった。焚火の炎を見つめながら、幸せな時間を共有し、マシュマロを焼いて笑い合った。自然の中での静寂に包まれ、心が穏やかになった。この経験は忘れられない思い出となった。`,
+		lineHeight,
+		pageReact,
+	)
+	AddDialyPage(
+		&pdf,
+		pageTemplateID,
+		"./assets/photo/camp.jpg",
+		`今日は自然の中での素晴らしい時間を過ごした。朝は鳥のさえずりで目覚め、清涼な空気を吸いながらの朝食は格別だった。
+	昼間は木々の間を散策し、奇跡的な景色に感動した。夜には満天の星空の下、仲間との団欒が心地よかった。焚火の炎を見つめながら、幸せな時間を共有し、マシュマロを焼いて笑い合った。自然の中での静寂に包まれ、心が穏やかになった。この経験は忘れられない思い出となった。`,
+		lineHeight,
+		pageReact,
+	)
+
+	// 背表紙
+	pdf.AddPage()
+	pdf.UseImportedTemplate(pdf.ImportPage("./assets/pdf/diary_back_cover.pdf", 1, MediaBox), 0, 0, pageReact.W, pageReact.H)
+
+	pdf.WritePdf("./output/output.pdf")
+
+	return nil
+}
+
+func AddDialyPage(pdf *gopdf.GoPdf, templateID int, imagePath string, text string, lineHeight float64, pageReact gopdf.Rect) error {
+	pdf.AddPage()
+	pdf.UseImportedTemplate(templateID, 0, 0, pageReact.W, pageReact.H)
 
 	// Rectにリサイズが行われて、比率が変わると引き伸ばされる
-	pdf.Image("./assets/photo/camp.jpg", 47.64, 75, &gopdf.Rect{
+	pdf.Image(imagePath, 47.64, 75, &gopdf.Rect{
 		W: 500,
 		H: 375,
 	})
-
-	// ChatGPT
-	text := `今日は自然の中での素晴らしい時間を過ごした。朝は鳥のさえずりで目覚め、清涼な空気を吸いながらの朝食は格別だった。
-	昼間は木々の間を散策し、奇跡的な景色に感動した。夜には満天の星空の下、仲間との団欒が心地よかった。焚火の炎を見つめながら、幸せな時間を共有し、マシュマロを焼いて笑い合った。自然の中での静寂に包まれ、心が穏やかになった。この経験は忘れられない思い出となった。`
 
 	// 横幅に適用できるように文字を分割、改行できるように
 	// TODO: 改行コードの分だけスペースが空く
@@ -62,16 +101,11 @@ func ExportDiary() error {
 		return fmt.Errorf(err.Error())
 	}
 
-	// 暫定
-	lineHeight := 16 * 1.2
-
 	for i, line := range lines {
-		if err := drawText(&pdf, 40, 480+float64(i)*lineHeight, line); err != nil {
+		if err := drawText(pdf, 40, 480+float64(i)*lineHeight, line); err != nil {
 			return fmt.Errorf(err.Error())
 		}
 	}
-
-	pdf.WritePdf("./output/output.pdf")
 
 	return nil
 }
