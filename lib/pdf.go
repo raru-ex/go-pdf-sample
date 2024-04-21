@@ -2,6 +2,7 @@ package lib
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/raru-ex/pdf-sample/core/model"
 	"github.com/signintech/gopdf"
@@ -15,7 +16,7 @@ const (
 	ArtBox   = "/ArtBox"
 )
 
-// TODO: 適当にとりあえず
+// 適当にとりあえず
 func ExportDiary() error {
 	pdf := gopdf.GoPdf{}
 	pazeSize := model.NewA4()
@@ -40,6 +41,7 @@ func ExportDiary() error {
 
 	// 暫定: fontの設定と行幅が色んな場所で転々と利用されているのがいまいち
 	lineHeight := 16 * 1.2
+	today := time.Now()
 
 	// 表紙
 	pdf.AddPage()
@@ -47,16 +49,17 @@ func ExportDiary() error {
 
 	// 日記の各ページ
 	pageTemplateID := pdf.ImportPage("./assets/pdf/diary_page.pdf", 1, MediaBox)
-	AddDialyPage(
+	addDialyPage(
 		&pdf,
 		pageTemplateID,
 		"./assets/photo/camp.jpg",
 		`今日は自然の中での素晴らしい時間を過ごした。朝は鳥のさえずりで目覚め、清涼な空気を吸いながらの朝食は格別だった。
-昼間は木々の間を散策し、奇跡的な景色に感動した。夜には満天の星空の下、仲間との団欒が心地よかった。焚火の炎を見つめながら、幸せな時間を共有し、マシュマロを焼いて笑い合った。自然の中での静寂に包まれ、心が穏やかになった。この経験は忘れられない思い出となった。`, // ChatGPT
+昼間は木々の間を散策し、奇跡的な景色に感動した。夜には満天の星空の下、仲間との団欒が心地よかった。焚火の炎を見つめながら、幸せな時間を共有し、マシュマロを焼いて笑い合った。自然の中での静寂に包まれ、心が穏やかになった。この経験は忘れられない思い出となった。`, // ChatGPT,
+		today,
 		lineHeight,
 		pageReact,
 	)
-	AddDialyPage(
+	addDialyPage(
 		&pdf,
 		pageTemplateID,
 		"./assets/photo/park.jpg",
@@ -67,10 +70,11 @@ func ExportDiary() error {
 公園を一周すると、花壇にたくさんの花が咲いていました。太郎は花に興味津々で、一緒に色とりどりの花を見て回りました。その中で彼が一番気に入ったのは、赤いバラでした。
 
 帰り道、太郎は公園の思い出を語りながら、手を繋いで歩いていました。`,
+		today.AddDate(0, 0, 1),
 		lineHeight,
 		pageReact,
 	)
-	AddDialyPage(
+	addDialyPage(
 		&pdf,
 		pageTemplateID,
 		"./assets/photo/aquarium.jpg",
@@ -83,10 +87,11 @@ func ExportDiary() error {
 水族館の中庭では、イルカショーを見ることができました。太郎はイルカのジャンプや芸に大喜びし、拍手を送りました。
 
 帰り道、太郎は水族館で見た魚やイルカの話を熱心にしました。`,
+		today.AddDate(0, 0, 2),
 		lineHeight,
 		pageReact,
 	)
-	AddDialyPage(
+	addDialyPage(
 		&pdf,
 		pageTemplateID,
 		"./assets/photo/sky.jpg",
@@ -99,10 +104,11 @@ func ExportDiary() error {
 月も明るく輝いており、その光が公園を照らしていました。太郎は月に向かって手を伸ばし、「月に行きたいな」とつぶやきました。
 
 しばらくして、遠くの方で流れ星が流れていくのを見つけました。太郎は一生懸命に願い事をしました。`,
+		today.AddDate(0, 0, 3),
 		lineHeight,
 		pageReact,
 	)
-	AddDialyPage(
+	addDialyPage(
 		&pdf,
 		pageTemplateID,
 		"./assets/photo/carwindow.jpg",
@@ -113,6 +119,7 @@ func ExportDiary() error {
 電車に乗っている間、太郎は窓の外の景色を興味深そうに眺めていました。通り過ぎる田園風景や建物に興味津々で、何度も「見て！」「あれは何？」と質問してきました。
 
 目的地に到着すると、太郎はワクワクしながら電車から降り、周りを探検しました。公園や商店街を散策し、地元のお店で美味しいおやつを食べました。`,
+		today.AddDate(0, 0, 4),
 		lineHeight,
 		pageReact,
 	)
@@ -126,9 +133,13 @@ func ExportDiary() error {
 	return nil
 }
 
-func AddDialyPage(pdf *gopdf.GoPdf, templateID int, imagePath string, text string, lineHeight float64, pageReact gopdf.Rect) error {
+func addDialyPage(pdf *gopdf.GoPdf, templateID int, imagePath string, text string, datetime time.Time, lineHeight float64, pageReact gopdf.Rect) error {
 	pdf.AddPage()
 	pdf.UseImportedTemplate(templateID, 0, 0, pageReact.W, pageReact.H)
+
+	// 日付
+	formattedDate := datetime.Format("2006/01/02 15:04")
+	drawText(pdf, 420, 50, formattedDate)
 
 	// Rectにリサイズが行われて、比率が変わると引き伸ばされる
 	pdf.Image(imagePath, 47.64, 75, &gopdf.Rect{
@@ -136,7 +147,7 @@ func AddDialyPage(pdf *gopdf.GoPdf, templateID int, imagePath string, text strin
 		H: 375,
 	})
 
-	// 横幅に適用できるように文字を分割、改行できるように
+	// 本文: 横幅に適用できるように文字を分割、改行
 	lines, err := pdf.SplitText(text, 480)
 	if err != nil {
 		return fmt.Errorf(err.Error())
