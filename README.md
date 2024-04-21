@@ -18,4 +18,6 @@ PDFは商用利用可能な適当なものを配置。
     - 1.7のものはMediaBoxなどがない
 	- pdf1.7のものはカタログ辞書形式というものっぽい
 	- Type/Pages, KidsがないPDFのだと、gofpdiはうまく読めない...?
-
+- 製本サービス
+  - サービスに組み込む用のAPI...?がある
+  - https://www.seichoku.com/user_data/business_guide.php
