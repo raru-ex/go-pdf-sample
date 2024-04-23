@@ -77,7 +77,7 @@ func ExportDiary() error {
 	addDialyPage(
 		&pdf,
 		pageTemplateID,
-		"./assets/photo/aquarium.jpg",
+		"./assets/photo/aquarium_300dpi.jpg",
 		`今日は晴れていて、息子の太郎と一緒に水族館に行ってきました。太郎は水族館が大好きで、前から行きたがっていたので、とても楽しみにしていました。
 
 水族館に着くと、太郎はワクワクして入り口で手を振りました。館内に入ると、まずはペンギンやイルカなどの展示を見て回りました。太郎は色とりどりの魚に興味津々で、ガラス越しにじっと観察していました。
@@ -123,6 +123,12 @@ func ExportDiary() error {
 		lineHeight,
 		pageReact,
 	)
+
+	// 画像のDPI差による見栄えの確認用ページ
+	pdf.AddPage()
+	pdf.UseImportedTemplate(pageTemplateID, 0, 0, pageReact.W, pageReact.H)
+	pdf.Image("./assets/photo/aquarium_300dpi.jpg", 47.64, 25, &gopdf.Rect{W: 500, H: 375})
+	pdf.Image("./assets/photo/aquarium_72dpi.jpg", 47.64, 425, &gopdf.Rect{W: 500, H: 375})
 
 	// 背表紙
 	pdf.AddPage()
